@@ -11,7 +11,7 @@ public class UpsertNotificationPreference {
     @NotNull
     private UUID userId;
 
-    private boolean notificationEnabled;
-
     private String contactInfo;
+
+    private boolean notificationEnabled;
 }

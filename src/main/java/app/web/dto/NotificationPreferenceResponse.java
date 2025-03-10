@@ -9,11 +9,7 @@ import java.util.UUID;
 @Builder
 public class NotificationPreferenceResponse {
 
-    private UUID id;
-
     private UUID userId;
-
     private boolean enabled;
-
     private String contactInfo;
 }

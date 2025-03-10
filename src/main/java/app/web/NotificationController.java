@@ -31,69 +31,63 @@ public class NotificationController {
     public ResponseEntity<NotificationPreferenceResponse> upsertNotificationPreference(@RequestBody UpsertNotificationPreference upsertNotificationPreference) {
 
         NotificationPreference notificationPreference = notificationService.upsertPreference(upsertNotificationPreference);
+
         NotificationPreferenceResponse responseDto = DtoMapper.fromNotificationPreference(notificationPreference);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(responseDto);
     }
+
 
     @GetMapping("/preferences")
     public ResponseEntity<NotificationPreferenceResponse> getUserNotificationPreference(@RequestParam(name = "userId") UUID userId) {
 
         NotificationPreference notificationPreference = notificationService.getPreferenceByUserId(userId);
+
         NotificationPreferenceResponse responseDto = DtoMapper.fromNotificationPreference(notificationPreference);
 
-        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
-    }
-
-    @PutMapping("/preferences")
-    public ResponseEntity<NotificationPreferenceResponse> changeNotificationPreference(@RequestParam(name = "userId") UUID userId,
-                                                                                       @RequestParam(name = "enabled") boolean enabled) {
-
-        NotificationPreference notificationPreference = notificationService.changeNotificationPreference(userId, enabled);
-        NotificationPreferenceResponse responseDto = DtoMapper.fromNotificationPreference(notificationPreference);
-
-        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(responseDto);
     }
 
     @PostMapping
     public ResponseEntity<NotificationResponse> sendNotification(@RequestBody NotificationRequest notificationRequest) {
 
         Notification notification = notificationService.sendNotification(notificationRequest);
+
         NotificationResponse response = DtoMapper.fromNotification(notification);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
 
     @GetMapping
     public ResponseEntity<List<NotificationResponse>> getNotificationHistory(@RequestParam(name = "userId") UUID userId) {
 
-        List<NotificationResponse> notificationHistory = notificationService.getNotificationHistory(userId)
-                .stream()
-                .map(DtoMapper::fromNotification)
-                .toList();
+        List<NotificationResponse> notificationHistory = notificationService.getNotificationHistory(userId).stream().map(DtoMapper::fromNotification).toList();
 
-        return ResponseEntity.status(HttpStatus.OK).body(notificationHistory);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(notificationHistory);
     }
 
-    @GetMapping("/unread")
-    public ResponseEntity<List<NotificationResponse>> getUnreadNotifications(@RequestParam UUID userId) {
+    @PutMapping("/preferences")
+    public ResponseEntity<NotificationPreferenceResponse> changeNotificationPreference(@RequestParam(name = "userId") UUID userId, @RequestParam(name = "enabled") boolean enabled) {
 
-        List<NotificationResponse> unreadNotifications = notificationService.getUnreadNotifications(userId)
-                .stream()
-                .map(DtoMapper::fromNotification)
-                .toList();
+        NotificationPreference notificationPreference = notificationService.changeNotificationPreference(userId, enabled);
 
-        return ResponseEntity.ok(unreadNotifications);
-    }
+        NotificationPreferenceResponse responseDto = DtoMapper.fromNotificationPreference(notificationPreference);
 
-    @PutMapping("/mark-read")
-    public ResponseEntity<Void> markNotificationsAsRead(@RequestParam UUID userId) {
-        notificationService.markAllAsRead(userId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(responseDto);
     }
 
     @GetMapping("/test")
-    public ResponseEntity<String> getHelloWorld(@RequestParam(name = "name") String name) {
-        return ResponseEntity.ok("Hello, " + name + " user!");
+    public ResponseEntity<String> test(@RequestParam(defaultValue = "World") String name) {
+        return ResponseEntity.ok("Hello, " + name + " from Notification Service!");
     }
 }

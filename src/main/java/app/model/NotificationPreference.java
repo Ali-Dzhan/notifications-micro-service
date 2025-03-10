@@ -13,13 +13,11 @@ import java.util.UUID;
 public class NotificationPreference {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
-    @Column(unique = true, nullable = false)
     private UUID userId;
 
+    @Column(nullable = false)
     private boolean enabled;
 
+    @Column(nullable = false)
     private String contactInfo;
 }

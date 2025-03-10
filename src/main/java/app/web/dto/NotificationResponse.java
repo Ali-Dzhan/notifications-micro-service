@@ -11,13 +11,8 @@ import java.util.UUID;
 public class NotificationResponse {
 
     private UUID id;
-
+    private UUID userId;
     private String subject;
-
     private String body;
-
     private LocalDateTime createdOn;
-
-    private boolean seen;
-
 }

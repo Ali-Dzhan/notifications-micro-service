@@ -21,15 +21,14 @@ public class Notification {
     private UUID id;
 
     @Column(nullable = false)
-    private String subject;
+    private UUID userId;
 
     @Column(nullable = false)
+    private String subject;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String body;
 
     @Column(nullable = false)
     private LocalDateTime createdOn;
-
-    private UUID userId;
-
-    private boolean seen;
 }

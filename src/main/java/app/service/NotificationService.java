@@ -6,6 +6,7 @@ import app.repository.NotificationPreferenceRepository;
 import app.repository.NotificationRepository;
 import app.web.dto.NotificationRequest;
 import app.web.dto.UpsertNotificationPreference;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailSender;
@@ -26,56 +27,64 @@ public class NotificationService {
     private final MailSender mailSender;
 
     @Autowired
-    public NotificationService(NotificationPreferenceRepository preferenceRepository, NotificationRepository notificationRepository, MailSender mailSender) {
+    public NotificationService(NotificationPreferenceRepository preferenceRepository,
+                               NotificationRepository notificationRepository,
+                               MailSender mailSender) {
         this.preferenceRepository = preferenceRepository;
         this.notificationRepository = notificationRepository;
         this.mailSender = mailSender;
     }
 
+    @Transactional
     public NotificationPreference upsertPreference(UpsertNotificationPreference dto) {
-        Optional<NotificationPreference> userPreferenceOpt = preferenceRepository.findByUserId(dto.getUserId());
+        Optional<NotificationPreference> existingOpt = preferenceRepository.findByUserId(dto.getUserId());
 
-        if (userPreferenceOpt.isPresent()) {
-            NotificationPreference preference = userPreferenceOpt.get();
+        if (existingOpt.isPresent()) {
+            NotificationPreference preference = existingOpt.get();
             preference.setContactInfo(dto.getContactInfo());
             preference.setEnabled(dto.isNotificationEnabled());
             return preferenceRepository.save(preference);
         }
-
-        NotificationPreference preference = NotificationPreference.builder()
+        NotificationPreference newPref = NotificationPreference.builder()
                 .userId(dto.getUserId())
                 .enabled(dto.isNotificationEnabled())
                 .contactInfo(dto.getContactInfo())
                 .build();
 
-        return preferenceRepository.save(preference);
+        return preferenceRepository.save(newPref);
     }
 
     public NotificationPreference getPreferenceByUserId(UUID userId) {
-        return preferenceRepository.findByUserId(userId).orElseGet(() -> {
-            NotificationPreference defaultPreference = NotificationPreference.builder()
-                    .userId(userId)
-                    .enabled(true)
-                    .contactInfo("")
-                    .build();
-            return preferenceRepository.save(defaultPreference);
-        });
+        return preferenceRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Notification preference not found for user: " + userId
+                ));
     }
 
+    @Transactional
     public Notification sendNotification(NotificationRequest notificationRequest) {
-
         UUID userId = notificationRequest.getUserId();
+
         NotificationPreference userPreference = getPreferenceByUserId(userId);
 
         if (!userPreference.isEnabled()) {
-            throw new IllegalArgumentException("User with id %s does not allow to receive notifications.".formatted(userId));
+            throw new IllegalArgumentException("User with id %s does not allow to receive notifications."
+                    .formatted(userId));
         }
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(userPreference.getContactInfo());
-        message.setSubject(notificationRequest.getSubject());
-        message.setText(notificationRequest.getBody());
-        message.setFrom("alidzhansadak04@gmail.com");
+        if (userPreference.getContactInfo() != null && !userPreference.getContactInfo().isBlank()) {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(userPreference.getContactInfo());
+            message.setSubject(notificationRequest.getSubject());
+            message.setText(notificationRequest.getBody());
+
+            try {
+                mailSender.send(message);
+                log.info("Email sent to [{}]", userPreference.getContactInfo());
+            } catch (Exception e) {
+                log.warn("Failed to send email to [{}]: {}", userPreference.getContactInfo(), e.getMessage());
+            }
+        }
 
         Notification notification = Notification.builder()
                 .subject(notificationRequest.getSubject())
@@ -84,41 +93,17 @@ public class NotificationService {
                 .userId(userId)
                 .build();
 
-        try {
-            mailSender.send(message);
-        } catch (Exception e) {
-            log.warn("There was an issue sending an email to %s due to %s.".formatted(userPreference.getContactInfo(), e.getMessage()));
-        }
-
         return notificationRepository.save(notification);
     }
-
-    public List<Notification> getUnreadNotifications(UUID userId) {
-        return notificationRepository.findByUserIdAndSeenFalse(userId);
-    }
-
+    
     public List<Notification> getNotificationHistory(UUID userId) {
         return notificationRepository.findByUserId(userId);
     }
 
-    public void markAllAsRead(UUID userId) {
-        List<Notification> notifications = notificationRepository.findByUserIdAndSeenFalse(userId);
-        notifications.forEach(n -> n.setSeen(true));
-        notificationRepository.saveAll(notifications);
-    }
-
-    private void sendEmail(String to, String subject, String body) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(to);
-        message.setSubject(subject);
-        message.setText(body);
-        mailSender.send(message);
-    }
-
+    @Transactional
     public NotificationPreference changeNotificationPreference(UUID userId, boolean enabled) {
-
-        NotificationPreference notificationPreference = getPreferenceByUserId(userId);
-        notificationPreference.setEnabled(enabled);
-        return preferenceRepository.save(notificationPreference);
+        NotificationPreference preference = getPreferenceByUserId(userId);
+        preference.setEnabled(enabled);
+        return preferenceRepository.save(preference);
     }
 }
