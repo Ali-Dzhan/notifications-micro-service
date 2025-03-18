@@ -8,6 +8,8 @@ import app.web.dto.NotificationRequest;
 import app.web.dto.NotificationResponse;
 import app.web.dto.UpsertNotificationPreference;
 import app.web.mapper.DtoMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/notifications")
+@Tag(name = "Notification Management", description = "Operations related to notifications")
 public class NotificationController {
 
     private final NotificationService notificationService;
@@ -28,11 +31,15 @@ public class NotificationController {
     }
 
     @PostMapping("/preferences")
-    public ResponseEntity<NotificationPreferenceResponse> upsertNotificationPreference(@RequestBody UpsertNotificationPreference upsertNotificationPreference) {
+    @Operation(summary = "Create new Notification Preference", description = "Returns the created notification preference.")
+    public ResponseEntity<NotificationPreferenceResponse>
+    upsertNotificationPreference(@RequestBody UpsertNotificationPreference upsertNotificationPreference) {
 
-        NotificationPreference notificationPreference = notificationService.upsertPreference(upsertNotificationPreference);
+        NotificationPreference notificationPreference =
+                notificationService.upsertPreference(upsertNotificationPreference);
 
-        NotificationPreferenceResponse responseDto = DtoMapper.fromNotificationPreference(notificationPreference);
+        NotificationPreferenceResponse responseDto =
+                DtoMapper.fromNotificationPreference(notificationPreference);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -41,11 +48,14 @@ public class NotificationController {
 
 
     @GetMapping("/preferences")
-    public ResponseEntity<NotificationPreferenceResponse> getUserNotificationPreference(@RequestParam(name = "userId") UUID userId) {
+    public ResponseEntity<NotificationPreferenceResponse>
+    getUserNotificationPreference(@RequestParam(name = "userId") UUID userId) {
 
-        NotificationPreference notificationPreference = notificationService.getPreferenceByUserId(userId);
+        NotificationPreference notificationPreference =
+                notificationService.getPreferenceByUserId(userId);
 
-        NotificationPreferenceResponse responseDto = DtoMapper.fromNotificationPreference(notificationPreference);
+        NotificationPreferenceResponse responseDto =
+                DtoMapper.fromNotificationPreference(notificationPreference);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -53,7 +63,8 @@ public class NotificationController {
     }
 
     @PostMapping
-    public ResponseEntity<NotificationResponse> sendNotification(@RequestBody NotificationRequest notificationRequest) {
+    public ResponseEntity<NotificationResponse>
+    sendNotification(@RequestBody NotificationRequest notificationRequest) {
 
         Notification notification = notificationService.sendNotification(notificationRequest);
 
@@ -65,9 +76,12 @@ public class NotificationController {
     }
 
     @GetMapping
-    public ResponseEntity<List<NotificationResponse>> getNotificationHistory(@RequestParam(name = "userId") UUID userId) {
+    public ResponseEntity<List<NotificationResponse>>
+    getNotificationHistory(@RequestParam(name = "userId") UUID userId) {
 
-        List<NotificationResponse> notificationHistory = notificationService.getNotificationHistory(userId).stream().map(DtoMapper::fromNotification).toList();
+        List<NotificationResponse> notificationHistory =
+                notificationService.getNotificationHistory(userId)
+                        .stream().map(DtoMapper::fromNotification).toList();
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -75,11 +89,15 @@ public class NotificationController {
     }
 
     @PutMapping("/preferences")
-    public ResponseEntity<NotificationPreferenceResponse> changeNotificationPreference(@RequestParam(name = "userId") UUID userId, @RequestParam(name = "enabled") boolean enabled) {
+    public ResponseEntity<NotificationPreferenceResponse>
+    changeNotificationPreference(@RequestParam(name = "userId") UUID userId,
+                                 @RequestParam(name = "enabled") boolean enabled) {
 
-        NotificationPreference notificationPreference = notificationService.changeNotificationPreference(userId, enabled);
+        NotificationPreference notificationPreference =
+                notificationService.changeNotificationPreference(userId, enabled);
 
-        NotificationPreferenceResponse responseDto = DtoMapper.fromNotificationPreference(notificationPreference);
+        NotificationPreferenceResponse responseDto =
+                DtoMapper.fromNotificationPreference(notificationPreference);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
