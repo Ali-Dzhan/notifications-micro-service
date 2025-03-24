@@ -17,7 +17,8 @@ public class ExceptionAdvice {
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFoundEndpoint() {
 
-        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND.value(), "Not supported application endpoint.");
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND.value(),
+                "Not supported application endpoint.");
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }

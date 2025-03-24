@@ -31,7 +31,8 @@ public class NotificationController {
     }
 
     @PostMapping("/preferences")
-    @Operation(summary = "Create new Notification Preference", description = "Returns the created notification preference.")
+    @Operation(summary = "Create new Notification Preference",
+            description = "Returns the created notification preference.")
     public ResponseEntity<NotificationPreferenceResponse>
     upsertNotificationPreference(@RequestBody UpsertNotificationPreference upsertNotificationPreference) {
 
